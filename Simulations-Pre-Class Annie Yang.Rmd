@@ -39,24 +39,44 @@ end<-function(bankroll,bet,p){for(i in 1:5000){
 else {bankroll<-bankroll-bet}
   if(bankroll==0) break
 }
-  return(i)
+return(c(i,bankroll))
 }
-time_end<-replicate(1000,end(1000,100,0.5))
-prob<-sum(time_end<100)/length(time_end)
-prob
+time_end<-matrix(replicate(1000,end(1000,100,0.5)),nrow=2,byrow=F)
+prob1<-sum(time_end[1,]<100)/length(time_end[1,])
+prob1
 ```    
     
     
     b. the probability that you have busted by the time you have placed your five hundredth bet by simulating the outcome directly.
     
 ```{r}
-
+prob2<-sum(time_end[1,]<500)/length(time_end[1,])
+prob2
 ```
 
     
     c. the mean time you go bust, given that you go bust within the first 5000 hands.
+    
+```{r}
+install.packages("dplyr")
+library(dplyr)
+rownames(time_end)<-c("time","bankroll")
+df<-as_tibble(t(time_end))
+df%>%filter(bankroll==0)%>%summarise(mean_t=mean(time))
+```
+
     d. the mean and variance of your bankroll after 100 hands (including busts).
+    
+```{r}
+df%>%filter(time>100)%>%summarise(mean_b=mean(bankroll),var_b=var(bankroll))
+```
+
     e. the mean and variance of your bankroll after 500 hands (including busts).
+  
+```{r}
+df%>%filter(time>500)%>%summarise(mean_b=mean(bankroll),var_b=var(bankroll))
+```
+
  
 Note: you *must* stop playing if your player has gone bust. How will you handle this in the `for` loop?
 
