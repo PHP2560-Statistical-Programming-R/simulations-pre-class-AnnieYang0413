@@ -1,6 +1,6 @@
 ---
-title: "Simulations Pre-Class Project"
-date: "Due March 13, 2017 at 5:00pm"
+title: "Simulations Pre-Class Project Annie Yang"
+date: "OCT 10"
 output:
   html_document
 
@@ -56,25 +56,33 @@ prob2
 
     
     c. the mean time you go bust, given that you go bust within the first 5000 hands.
-    
+
 ```{r}
-install.packages("dplyr")
-library(dplyr)
 rownames(time_end)<-c("time","bankroll")
-df<-as_tibble(t(time_end))
-df%>%filter(bankroll==0)%>%summarise(mean_t=mean(time))
+df<-data.frame(t(time_end))
+bankroll0<-df[df$bankroll==0,]
+mean_t<-mean(bankroll0$time)
+mean_t
 ```
 
     d. the mean and variance of your bankroll after 100 hands (including busts).
     
 ```{r}
-df%>%filter(time>100)%>%summarise(mean_b=mean(bankroll),var_b=var(bankroll))
+hand100<-df[df$time>100,]
+mean_b1<-mean(hand100$bankroll)
+var_b1<-var(hand100$bankroll)
+mean_b1
+var_b1
 ```
 
     e. the mean and variance of your bankroll after 500 hands (including busts).
-  
+
 ```{r}
-df%>%filter(time>500)%>%summarise(mean_b=mean(bankroll),var_b=var(bankroll))
+hand500<-df[df$time>500,]
+mean_b5<-mean(hand500$bankroll)
+var_b5<-var(hand500$bankroll)
+mean_b5
+var_b5
 ```
 
  
@@ -83,5 +91,58 @@ Note: you *must* stop playing if your player has gone bust. How will you handle 
 
 2. **Markov Chains**. Suppose you have a game where the probability of winning on your first hand is 48%; each time you win, that probability goes up by one percentage point for the next game (to a maximum of 100%, where it must stay), and each time you lose, it goes back down to 48%. Assume you cannot go bust and that the size of your wager is a constant $100.
     a. Is this a fair game? Simulate one hundred thousand sequential hands to determine the size of your return. Then repeat this simulation 99 more times to get a range of values to calculate the expectation.
+    
+```{r}
+prob<-function(bet,p){
+  p0<-p
+  cbet=0
+  for(i in 1:100000){
+  if(runif(1)<=p&p<1){cbet=cbet+bet;p=p+0.01}
+else if(p==1){cbet=cbet+bet}
+    else{cbet=cbet-bet;p=p0}
+  }
+return(cbet)
+}
+
+p_sim<-replicate(100,prob(100,0.48))
+mean(p_sim)
+```
+
+
     b. Repeat this process but change the starting probability to a new value within 2% either way. Get the expected return after 100 repetitions. Keep exploring until you have a return value that is as fair as you can make it. Can you do this automatically?
+
+```{r}
+
+p_seq<-seq(from=0.488,to=0.490,by=0.0002)
+value<-vector("double",length(p_seq))
+for(i in 1:length(p_seq)){
+value[i]<-mean(replicate(100,prob(100,p_seq[i])))
+}
+value
+# For the first test, generate a sequence from 0.48 to 0.49. And the starting probability should be around 0.489 to make a relatively fair return value. Then do the second test, generate a sequence from 0.488 to 0.490. After analysing the value, the starting probability should be around 0.4895.
+```
+
+
     c. Repeat again, keeping the initial probability at 48%, but this time change the probability increment to a value different from 1%. Get the expected return after 100 repetitions. Keep changing this value until you have a return value that is as fair as you can make it. 
+
+```{r}
+
+change_inc<-function(bet,p,inc){
+  p0<-p
+  cbet=0
+  for(i in 1:100000){
+  if(runif(1)<=p&p<1){cbet=cbet+bet;p=p+inc}
+else if(p==1){cbet=cbet+bet}
+    else{cbet=cbet-bet;p=p0}
+  }
+return(cbet)
+}
+change<-seq(0.01,0.02,0.001)
+exp<-vector("double",length(change))
+for(i in 1:length(change)){
+exp[i]<-mean(replicate(100,change_inc(100,0.48,change[i])))
+}
+exp
+#so to make it fair, the probability increment should be around 0.018. To get a more accurate probability increment, generate a sequence from 0.017 to 0.019 and observe the result.
+
+```
